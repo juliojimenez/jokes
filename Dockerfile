@@ -4,10 +4,11 @@ RUN apt-get update -yq && \
 	apt-get install -yq ca-certificates && \
 	apt-get install -yq build-essential && \
 	apt-get install -yq clang
-COPY public /app
-COPY main.c /app
-COPY Makefile /app
-RUN make -C /app
-RUN ls -l /app
+WORKDIR /app
+COPY public public/
+COPY main.c .
+COPY Makefile .
+RUN make
+RUN ls -l .
 EXPOSE 8080
 ENTRYPOINT [ "/app/jokes" ]
