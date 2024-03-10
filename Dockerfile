@@ -11,4 +11,4 @@ COPY Makefile .
 RUN make
 RUN ls -l .
 EXPOSE 8080
-ENTRYPOINT [ "/app/jokes" ]
+ENTRYPOINT [ "./jokes" ]
