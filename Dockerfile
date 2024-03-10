@@ -8,5 +8,6 @@ COPY public /app
 COPY main.c /app
 COPY Makefile /app
 RUN make -C /app
+RUN ls -l /app
 EXPOSE 8080
 ENTRYPOINT [ "/app/jokes" ]
