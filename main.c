@@ -1,18 +1,32 @@
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 #define PORT 8080
 
 void serveFile(int socket, const char *path);
 const char* getContentType(const char *path);
+char* read_random_line(const char* filename);
+
+int server_fd;
+
+void handle_sigint(int sig) {
+    printf("\nClosing socket and exiting...\n");
+    close(server_fd); // Close the server socket
+    exit(0); // Exit the program gracefully
+}
 
 int main() {
-    int server_fd, new_socket;
+	// Signal handling setup
+    signal(SIGINT, handle_sigint);
+    
+    int new_socket, opt = 1;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[1024] = {0};
@@ -22,6 +36,12 @@ int main() {
         perror("In socket");
         exit(EXIT_FAILURE);
     }
+    
+    // Set the server options
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+		perror("In setsockopt");
+		exit(EXIT_FAILURE);
+	}
     
     // Set the server address
     address.sin_family = AF_INET;
@@ -49,16 +69,26 @@ int main() {
         
         // Read the request from the client
         read(new_socket, buffer, 2048);
+        char *method = strtok(buffer, " ");
+        char *uri = strtok(NULL, " ");
         
-        // Simple request parsing for GET request
-        char *token = strtok(buffer, " ");
-        if (strcmp(token, "GET") == 0) {
-            token = strtok(NULL, " ");
-            char path[1024] = "public";
-            if (strlen(token) > 1) {    // request is not root
-                strcat(path, token);
-            } else {
+        if (strcmp(method, "POST") == 0 && strcmp(uri, "/joke") ==0) {
+        	char *joke = read_random_line("jokes.txt");
+         	if (joke) {
+          		char response[2048];
+                sprintf(response, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<span>%s</span>", joke);
+                write(new_socket, response, strlen(response));
+                free(joke);
+          	} else {
+		  		char *response = "HTTP/1.1 500 Internal Server Error\n\n";
+				write(new_socket, response, strlen(response));
+		  	}
+        } else if (strcmp(method, "GET") == 0) {
+            char path[1024] = "./public";
+            if (strcmp(uri, "/") == 0) {
                 strcat(path, "/index.html");
+            } else {
+                strcat(path, uri);
             }
             serveFile(new_socket, path);
         }
@@ -66,6 +96,7 @@ int main() {
     }
     return 0;
 }
+
 void serveFile(int socket, const char *path) {
     char buffer[1024];
     int filefd = open(path, O_RDONLY);
@@ -101,4 +132,43 @@ const char* getContentType(const char *path) {
         if (strcmp(dot, ".gif") == 0) return "image/gif";
     }
     return "text/plain";
+}
+
+char* read_random_line(const char* filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Failed to open file");
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    srand((unsigned)time(NULL));
+    long random_pos = rand() % size;
+
+    fseek(file, random_pos, SEEK_SET);
+
+    // Adjust to the start of the next line
+    char buffer[256];
+    fgets(buffer, sizeof(buffer), file); // Potentially partial line
+
+    char *line = malloc(256);
+    if (!line) {
+		perror("Failed to allocate memory");
+		fclose(file);	
+		return NULL;
+	}
+    
+    if (!fgets(line, 256, file)) { // Read the next full line
+        // If EOF is reached, start from the beginning
+        fseek(file, 0, SEEK_SET);
+        if (!fgets(line, 256, file)) {
+			perror("Failed to read line");
+			fclose(file);
+			free(line);
+			return NULL;
+		}
+    }
+    fclose(file);
+    return line;
 }

@@ -5,19 +5,12 @@
      	<meta name="viewport" content="width=device-width, initial-scale=1">
       	<meta name="description" content="Jokes, Dad Jokes, Puns">
        	<link rel="stylesheet" href="/static/css/style.css" />
-        <title>Jokes</title>
+        <script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
+        <title>I got Jokes!</title>
     </head>
-    <body>
-    <div class="joke-container">
-      <div class="joke">Why don’t scientists trust atoms? Because they make up everything!</div>
-      <button class="next-button" onclick="nextJoke()">Next</button>
-    </div>
-        <script>
-        // Placeholder for the nextJoke function
-        function nextJoke() {
-          // Implement joke fetching or cycling logic here
-          alert("Load the next joke!");
-        }
-        </script>
+    <body hx-trigger="load" hx-post="/joke" hx-swap="innerHTML" hx-target="#joke">
+	    <div hx-post="/joke" hx-swap="innerHTML" hx-target="#joke" class="joke-container">
+			<div hx-post="/joke" hx-swap="innerHTML" class="joke" id="joke"><span></span></div>
+	    </div>
     </body>
 </html>
