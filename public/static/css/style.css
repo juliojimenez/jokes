@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -6,21 +7,22 @@ body, html {
     background-color: #444488;
     overflow: hidden;
 }
-  
+
 .joke-container {
-	display: flex; /* Use flexbox */
-	justify-content: center; /* Center horizontally */
-	align-items: center; /* Center vertically */
-	text-align: center;
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: transparent;
+    display: flex; /* Use flexbox */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    text-align: center;
+    position: fixed;
+    padding: 10px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: transparent;
 }
 
-  .joke {
+.joke {
     font-size: 2em;
     color: #fff;
-  }
+}
